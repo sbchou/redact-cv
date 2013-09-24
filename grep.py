@@ -2,7 +2,10 @@ import pandas
 import glob
 import time
 import re
-
+"""
+@author sophie
+grep for executive orders in ddrs docs
+"""
 ## emulates output of grep
 def grep(paths, string):
     for f in paths:
@@ -47,4 +50,10 @@ fout.close()
 
 ## if you want to load the dataframe:
 df = pandas.DataFrame.from_csv('eo_table.csv', sep="\t")
+# example: filter by exec order id = 12356
+print df[df.eo_id == 12356].head
 
+## load the eo_meta.csv with meta data
+eo_df = pandas.DataFrame.from_csv('eo_meta.csv')
+# example
+print eo_df.head()
