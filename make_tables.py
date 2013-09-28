@@ -25,8 +25,8 @@ Output:
 """
 
 #paths = glob.glob("DDRS/ddrs/(0-9)*/*")
-paths = pickle.load(open('paths.pickle', 'r'))
-grep(paths, "E.O.", open('eo_table.csv', 'w'))
+paths = pickle.load(open('data/paths.pickle', 'r'))
+grep(paths, "E.O.", open('data/eo_table.csv', 'w'))
 
 ## regex patterns ###
 path_patt = re.compile('DDRS/ddrs/(\d+)/(\d+)\.txt')
@@ -36,7 +36,7 @@ eo_patt = re.compile('.*E\.O\.\s*(\d*).*')
 sec_patt = re.compile('.*(sec|sac)\.*\s*(.*)', re.IGNORECASE)
 
 # write to file
-fout = open("eo_table.csv", 'w')
+fout = open("data/eo_table.csv", 'w')
 fout.write("path\tdoc_id\tpage\teo_id\tsec\n")
 
 for line in open("eo_grep.csv", "r"):
@@ -61,11 +61,11 @@ fout.close()
 
 
 ## if you want to load the dataframe:
-doc_eo = pandas.DataFrame.from_csv('eo_table.csv', sep="\t")
+doc_eo = pandas.DataFrame.from_csv('data/eo_table.csv', sep="\t")
 # example: filter by exec order id = 12356
 print doc_eo[doc_eo.eo_id == 12356].head
 
 ## load the eo_meta.csv with meta data
-eo_meta = pandas.DataFrame.from_csv('eo_meta.csv')
+eo_meta = pandas.DataFrame.from_csv('data/eo_meta.csv')
 # sample
 print eo_meta.head()
