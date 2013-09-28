@@ -1,59 +1,31 @@
-import pandas
-import glob
-import time
-import re
 """
 @author sophie
-grep for executive orders in ddrs docs
+function to emulate Unix grep
 """
-## emulates output of grep
-def grep(paths, string):
+
+def grep(paths, string, fout=False):
+    """ Performs a search on files with given paths for a
+    string. Emulates Unix grep, for strings only.
+
+    Parameters
+    ----------
+    paths: list of file paths, which are strings
+    string: the string you're searching for
+    fout: (optional) the open file to write results out to.
+    If fout not given, print results to stoudt instead.
+    
+    Returns
+    -------
+    None. Either prints results or writes to file.
+
+    """
     for f in paths:
         for line in open(f):
             if string in line:
-                print(f + ":" + line)
+                if fout:
+                    fout.write(f + ":" + line + "\n")
+                else:
+                    print(f + ":" + line)
+    if fout:
+        fout.close()
             
-#paths = glob.glob("DDRS/ddrs/(0-9)*/*")
-paths = pickle.load(open('paths.pickle', 'r'))
-grep(paths, "E.O.") #cat this to a file
-
-## regex patterns ###
-path_patt = re.compile('DDRS/ddrs/(\d+)/(\d+)\.txt')
-text_patt = re.compile('E\.O\.\s*(.*)[\s\.,]*(.*)')
-
-eo_patt = re.compile('.*E\.O\.\s*(\d*).*')
-sec_patt = re.compile('.*(sec|sac)\.*\s*(.*)', re.IGNORECASE)
-
-# write to file
-fout = open("eo_table.csv", 'w')
-fout.write("path\tdoc_id\tpage\teo_id\tsec\n")
-
-for line in open("EO_grep.csv", "r"):
-    m = path_patt.match(line)
-    path = m.group()
-    doc_id = m.group(1)
-    page = m.group(2)
-
-    m = eo_patt.match(line)
-    eo_id = ""
-    if m:
-        eo_id = m.group(1)
-
-    m = sec_patt.match(line)
-    sec = ""
-    if m:
-        sec = m.group(2)
-
-    fout.write(path + "\t" + doc_id + "\t" + page + "\t" + eo_id + "\t" + sec + "\n")
-    
-fout.close()
-
-## if you want to load the dataframe:
-df = pandas.DataFrame.from_csv('eo_table.csv', sep="\t")
-# example: filter by exec order id = 12356
-print df[df.eo_id == 12356].head
-
-## load the eo_meta.csv with meta data
-eo_df = pandas.DataFrame.from_csv('eo_meta.csv')
-# example
-print eo_df.head()
