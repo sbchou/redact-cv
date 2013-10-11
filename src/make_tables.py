@@ -12,18 +12,6 @@ import argparse
 This executable does the following:
     1. Greps for "E.O." in all ddrs docs, saving to file
     2. Cleans and reads in this data to DataFrame
-    3. Also creates dataframe of E.O. metadata
-
-Files needed:
-    1. paths.pickle (pickled filepaths of all docs. If not, run 
-        'paths = glob.glob("DDRS/ddrs/(0-9)*/*"))'
-    2. eo_meta.csv, EO metadata file
-
-Output:
-    1. eo_grep.csv, simple grep of "E.O." results
-    2. eo_table.csv, ddrs EO data. Columns:
-        doc_id, page, eo_id, sec
-
 """
 def main():
     #paths = glob.glob("DDRS/ddrs/(0-9)*/*")
@@ -40,8 +28,7 @@ def main():
     
     with open(args['grep_out_path'], 'w') as grep_out:
         for line in grep(paths, "E.O."):
-            print >> grep_out, line
-
+            grep_out.write(line)
     
     ## regex patterns ###
     path_patt = re.compile('../data/ddrs/(\d+)/(\d+)\.txt')
@@ -50,14 +37,12 @@ def main():
     eo_patt = re.compile('.*E\.O\.\s*(\d*).*')
     sec_patt = re.compile('.*(sec|sac)\.*\s*(.*)', re.IGNORECASE)
 
-    # write to file
-    fout = open(args['eo_out_path'], 'w')
-    fout.write("path\tdoc_id\tpage\teo_id\tsec\n")
-
-    for line in open(args['grep_out_path'], 'r'):
-        if line.strip():
+    # write cleaned tables to file
+    with  open(args['eo_out_path'], 'w') as fout:
+        fout.write("number\tpath\tdoc_id\tpage\teo_id\tsec\n")
+        i = 0
+        for line in open(args['grep_out_path'], 'r'):
             m = path_patt.match(line)
-            print m
             path = m.group()
             doc_id = m.group(1)
             page = m.group(2)
@@ -71,23 +56,8 @@ def main():
             sec = ""
             if m:
                 sec = m.group(2)
-
-            fout.write(path + "\t" + doc_id + "\t" + page + "\t" + eo_id + "\t" + sec + "\n")
-            
-    fout.close()
-
-    """
-
-    ## if you want to load the dataframe:
-    doc_eo = pandas.DataFrame.from_csv('data/eo_table.csv', sep="\t")
-    # example: filter by exec order id = 12356
-    print doc_eo[doc_eo.eo_id == 12356].head
-
-    ## load the eo_meta.csv with meta data
-    eo_meta = pandas.DataFrame.from_csv('data/eo_meta.csv')
-    # sample
-    print eo_meta.head()
-    """
-
+            fout.write(str(i) + "\t" + path + "\t" + doc_id + "\t" + page + "\t" + eo_id + "\t" + sec + "\n")
+            i += 1
+   
 if __name__ == "__main__":
     main()

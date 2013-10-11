@@ -9,6 +9,6 @@ def grep(paths, string):
     string. Emulates Unix grep, for strings only.
     """
     for f in paths:
-	for line in open(f):
+        for line in open(f):
             if string in line:
                 yield(f + ":" + line)
