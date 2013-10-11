@@ -23,9 +23,9 @@ def main():
 
     args = vars(parser.parse_args())
 
-    #paths = pickle.load(open('data/paths.pickle', 'r'))
-    paths = glob.glob("../data/ddrs/311*/*")
-    
+    paths = pickle.load(open('../data/paths.pickle', 'r'))
+    #paths = glob.glob("../data/ddrs/*/*")
+
     with open(args['grep_out_path'], 'w') as grep_out:
         for line in grep(paths, "E.O."):
             grep_out.write(line)
