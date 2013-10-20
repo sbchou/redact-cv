@@ -54,7 +54,7 @@ def censor_dark(img_url, min_width_ratio, max_width_ratio,  min_height_ratio, ma
     return mask
 
 
-def template_match(img_url, template_url, outfile_name):
+def template_match(img_url, template_url, outfile_name, threshold):
     """
     For input img found in img_url, and template image found at
     template_url, outline all matches and output in new file.
@@ -66,7 +66,6 @@ def template_match(img_url, template_url, outfile_name):
     w, h = template.shape[::-1]
 
     res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
-    threshold = 0.8
     loc = np.where( res >= threshold)
 
     for pt in zip(*loc[::-1]):
