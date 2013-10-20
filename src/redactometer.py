@@ -52,3 +52,54 @@ def censor_dark(img_url, min_width_ratio, max_width_ratio,  min_height_ratio, ma
     plt.show()
 
     return mask
+
+
+def template_match(img_url, template_url, outfile_name):
+    """
+    For input img found in img_url, and template image found at
+    template_url, outline all matches and output in new file.
+    """
+
+    img_rgb = cv2.imread(img_url)
+    img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+    template = cv2.imread(template_url, 0)
+    w, h = template.shape[::-1]
+
+    res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
+    threshold = 0.8
+    loc = np.where( res >= threshold)
+
+    for pt in zip(*loc[::-1]):
+        cv2.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
+
+    cv2.imwrite(outfile_name, img_rgb)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
