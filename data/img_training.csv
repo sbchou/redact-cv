@@ -1,31 +1,31 @@
-Name	censored	num_redactions	
-2041100007.png	False	0	
-2052380007.png	True	1
-2196630006.png	False	0
-2211600002.png	True	1
-2221780003.png	True	1
-2236370001.png	True	1
-2236480001.png	True	1
-2280890005.png	True	2
-2304270001.png	True	1
-2361880002.png	False	0
-2457350003.png	True	1
-2457360006.png	True	1
-2460260002.png	True	1
-2466870002.png	True	3
-2482110008.png	True	2
-2482480003.png	True	2
-2502690002.png	False	0
-2553700006.png	False	0
-2568750005.png	True	0
-2589420003.png	True	1
-2605160002.png	True	5
-2645580001.png	True	1
-2665150002.png	True	2
-2681720005.png	False	0
-2845470001.png	False	0
-2855340002.png	True	1
-2867770007.png	True	1
-2909320007.png	False	0
-2909490002.png	False	0
-2948180001.png	False	0
+Name	censored	num_redactions	redaction_type
+2041100007.png	False	0	None
+2052380007.png	True	1	dark
+2196630006.png	False	0	None
+2211600002.png	True	1	dot
+2221780003.png	True	1	dot
+2236370001.png	True	1	dot
+2236480001.png	True	1	dot
+2280890005.png	True	2	dot
+2304270001.png	True	1	dot
+2361880002.png	False	0	None
+2457350003.png	True	1	dot
+2457360006.png	True	1	dot
+2460260002.png	True	1	dot
+2466870002.png	True	3	dark
+2482110008.png	True	2	dot
+2482480003.png	True	2	dot
+2502690002.png	False	0	None
+2553700006.png	False	0	None
+2568750005.png	True	1	dot
+2589420003.png	True	1	dot
+2605160002.png	True	5	dark
+2645580001.png	True	1	dot
+2665150002.png	True	2	dark
+2681720005.png	False	0	None
+2845470001.png	False	0	None
+2855340002.png	True	1	dark
+2867770007.png	True	1	dark
+2909320007.png	False	0	None
+2909490002.png	False	0	None
+2948180001.png	False	0	None
