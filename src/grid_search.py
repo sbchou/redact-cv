@@ -36,14 +36,26 @@ def gridsearch(param_grid, train, img_root, censor_type="dark"):
     argmax = []
 
     for combo in combos:
-        score = sum(bool(redactometer.censor_dark(img_root + str(train.ix[i]['img']), **combo)[1]) \
+        correct = sum(bool(redactometer.censor_dark(img_root + str(train.ix[i]['img']), **combo)[1]) \
                 == train.ix[i]['censored'] for i in train.index)
+        #score = percent correct
+        score = correct/len(train[train['redaction_type'] == censor_type])
         print score
         if score >= max_score:
             max_score = score
             argmax.append(combo)
                 
     return argmax, max_score     
+
+def complete_search(numsteps):
+    #range is inclusive
+    param_range = [x/float(numsteps) for x in range(numsteps + 1)]
+    param_grid = {'min_width_ratio' : param_range,
+                'max_width_ratio': param_range,
+                'min_height_ratio': param_range,
+                'max_height_ratio': param_range}
+    train = pandas.DataFrame.from_csv('../data/img_training.csv', sep="\t")
+    return gridsearch(param_grid, train, "../training_img/")
 
 
 def test():
