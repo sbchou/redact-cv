@@ -36,9 +36,10 @@ def gridsearch(param_grid, train, img_root, censor_type="dark"):
     argmax = []
 
     for combo in combos:
-        correct = sum(bool(redactometer.censor_dark(img_root + str(train.ix[i]['img']), **combo)[1]) \
-                == train.ix[i]['censored'] for i in train.index)
-        #score = percent correct
+        #are we able to get the right number of blobs?
+        correct = sum(len(redactometer.censor_dark(img_root + i, **combo)[1]) \
+                == train.ix[i]['total_censor'] for i in train.index)
+       #score = percent correct
         score = correct/len(train[train['redaction_type'] == censor_type])
         print score
         if score >= max_score:
@@ -47,22 +48,24 @@ def gridsearch(param_grid, train, img_root, censor_type="dark"):
                 
     return argmax, max_score     
 
-def complete_search(numsteps):
+def complete_search(training, img_dir, numsteps):
     #range is inclusive
     param_range = [x/float(numsteps) for x in range(numsteps + 1)]
     param_grid = {'min_width_ratio' : param_range,
                 'max_width_ratio': param_range,
                 'min_height_ratio': param_range,
                 'max_height_ratio': param_range}
-    train = pandas.DataFrame.from_csv('../data/img_training.csv', sep="\t")
-    return gridsearch(param_grid, train, "../training_img/")
+    return gridsearch(param_grid, training, img_dir)
 
+def test_complete():
+    training = pandas.DataFrame.from_csv('../data/train_dark.csv', sep="\t")
+    img_dir = "../dark_training/"
+    return complete_search(training, img_dir, 5)
 
 def test():
     param_grid = {'min_width_ratio': [0.01, 0.05, 0.10, 0.20], 
                 'max_width_ratio': [0.80, 0.90, 0.95, 1.0], 
                 'min_height_ratio': [0.01, 0.05, 0.10, 0.20],
                 'max_height_ratio': [0.80, 0.90, 0.95, 1.0]}   
-    train = pandas.DataFrame.from_csv('../data/img_training.csv', sep="\t")
-    return gridsearch(param_grid, train, "../training_img/")
-  
+    train = pandas.DataFrame.from_csv('../data/train_dark.csv', sep="\t")
+    return gridsearch(param_grid, train, "../train_dark/") 
