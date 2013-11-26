@@ -4,6 +4,7 @@ Grid Search
 import redactometer
 import pandas
 import itertools
+import time
 
 def gridsearch(param_grid, train, img_root, censor_type="dark"):
     """Simple paramter training for redactometer. Not as modular as it could be, and
@@ -45,7 +46,7 @@ def gridsearch(param_grid, train, img_root, censor_type="dark"):
         if score >= max_score:
             max_score = score
             argmax.append(combo)
-                
+    print time.time()            
     return argmax, max_score     
 
 def complete_search(training, img_dir, numsteps):
@@ -58,9 +59,9 @@ def complete_search(training, img_dir, numsteps):
     return gridsearch(param_grid, training, img_dir)
 
 def test_complete():
-    training = pandas.DataFrame.from_csv('../data/train_dark.csv', sep="\t")
-    img_dir = "../dark_training/"
-    return complete_search(training, img_dir, 5)
+     training = pandas.DataFrame.from_csv('../data/train_dark.csv', sep="\t")
+     img_dir = "../train_dark/"
+     return complete_search(training, img_dir, 5)
 
 def test():
     param_grid = {'min_width_ratio': [0.01, 0.05, 0.10, 0.20], 
