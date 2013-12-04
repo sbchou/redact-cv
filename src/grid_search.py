@@ -1,5 +1,5 @@
 """
-Grid Search 
+Grid Search this is thus far for dark censors
 """
 import redactometer
 import pandas
@@ -18,27 +18,20 @@ def gridsearch(param_grid, train, img_root, metric, censor_type="dark"):
     #I believe this is not the efficient way. (Dataframes should not be iterated)
 
     max_score = 0
-    argmax = []
-    total_img = len(train[train['redaction_type'] == censor_type])
-    print "number img", total_img
+    argmax = []  
     print "number combos", len(combos)
 
     for combo in combos:
         print "combo", combo
         #boolean
         if metric == 'is_censored':
-            correct = sum((len(redactometer.censor_dark(img_root + i, **combo)[1]) > 0) \
-               == train.ix[i]['is_censored'] for i in train.index)
-            score = float(correct)/float(total_img)
+            score = boolean_scoring(train, img_root, combo)
 
         #are we able to get the right number of blobs?
         if metric == 'total_censor':
-            correct = sum(len(redactometer.censor_dark(img_root + i, **combo)[1]) \
-                == train.ix[i]['total_censor'] for i in train.index)
-            score = float(correct)/float(total_img)
+            score = numerical_scoring(train, img_root, combo)
 
-        #score = percent correct
-        print "correct", correct
+        #score = percent correct 
         print "score", score
 
         #update
@@ -58,34 +51,24 @@ def complete_search(training, img_dir, metric, start, stop, step):
 
 def eval(test, params, img_root, metric, censor_type="dark"):
     """Evaluation results on test set"""
-    score = None
-    total_img = len(test[test['redaction_type'] == censor_type])
 
     if metric == "is_censored":
-        correct = sum((len(redactometer.censor_dark(img_root + i, **params)[1]) > 0) \
-           == test.ix[i]['is_censored'] for i in test.index)
-        score = float(correct)/float(total_img)
+        return boolean_scoring(test, img_root, params)
 
     if metric == "total_censor":
-        correct = sum(len(redactometer.censor_dark(img_root + i, **params)[1]) \
-                    == test.ix[i]['total_censor'] for i in test.index)
-        score = float(correct)/float(len(test[test['redaction_type'] == censor_type]))
-    
+        return numerical_scoring(test, img_root, params)
+
+def boolean_scoring(data, url, params):
+    """does not filter by censor type yet"""
+    correct = sum((len(redactometer.censor_dark(url + i, **params)[1]) > 0) \
+       == data.ix[i]['is_censored'] for i in data.index)
+    score = float(correct)/float(len(data.index))
     return score
 
-
-def train_complete(metric):
-     training = pandas.DataFrame.from_csv('../data/train_dark.csv', sep="\t")
-     img_dir = "../train_dark/"
-     return complete_search(training, img_dir, metric, 0.1, 0.9, 0.1)
-
-def train_grid(metric):
-    param_grid = {'min_width_ratio': [0.01, 0.05, 0.10, 0.20], 
-                'max_width_ratio': [0.80, 0.85, 0.90, 0.95], 
-                'min_height_ratio': [0.01, 0.05, 0.10, 0.20],
-                'max_height_ratio': [0.80, 0.85, 0.90, 0.95]}   
-    train = pandas.DataFrame.from_csv('../data/train_dark.csv', sep="\t")
-    return gridsearch(param_grid, train, "../train_dark/", metric) 
-
-
+def numerical_scoring(data, url, params):
+    """does not filter by censor type yet"""
+    correct = sum(len(redactometer.censor_dark(url + i, **params)[1]) \
+                == data.ix[i]['total_censor'] for i in data.index)
+    score = float(correct)/float(len(data.index))
+    return score
 
