@@ -4,7 +4,14 @@ import matplotlib
 import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
 import glob
-import os
+import os, random
+
+def unpaper(file, out):
+    a = str(random.random())
+    os.system("convert %s /tmp/%s.ppm"%(file, a))
+    os.system("unpaper   --no-blurfilter --no-noisefilter  /tmp/%s.ppm /tmp/%s.out.ppm"%(a, a))
+    os.system("convert /tmp/%s.out.ppm %s"%(a, out))
+
 
 def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
@@ -12,6 +19,7 @@ def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
     #print "img url", img_url
     img = cv2.imread(img_url)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     #grayscale the image
     plt.gray()
 
@@ -30,6 +38,7 @@ def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
         if (min_height_ratio * total_height < height < max_height_ratio * total_height) \
             and (min_width_ratio * total_width < width < max_width_ratio * total_width):
             cv2.drawContours(mask, [cnt], 0, 255, 1) 
+            #cv2.drawContours(orig_img, [cnt], 0, 255, 1) 
             censors.append(cnt)            
 
     #plt.imshow(mask)
@@ -44,33 +53,43 @@ def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
 
     #print "img url", img_url
     img = cv2.imread(img_url)
+
+    orig_img = cv2.imread(img_url)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, img = cv2.threshold(img, 127, 255, 1)
     #grayscale the image
+    #ret, gray = cv2.threshold(img, 127,255,0)
+    
     plt.gray()
 
     #im.shape = size of png, as np array
     mask = np.zeros(img.shape) #black mask in shape of image
     contours, hier = cv2.findContours(np.array(img), 
-                                      cv2.RETR_LIST, 
+                                      cv2.RETR_EXTERNAL, 
                                       cv2.CHAIN_APPROX_SIMPLE)
 
     total_height, total_width = img.shape
 
     censors = []
-    for cnt in contours:
+    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 255, 255), (255, 0, 255), (255, 255, 0)]
+    print len(contours)
+    for cnt in contours:        
         area = cv2.contourArea(cnt)
         x, y, width, height = cv2.boundingRect(cnt)
         if (min_height_ratio * total_height < height < max_height_ratio * total_height) \
-            and (min_width_ratio * total_width < width < max_width_ratio * total_width) \
-            and (min_width_ratio * total_width * min_height_ratio * total_height < area \
-                < max_width_ratio * total_width * max_height_ratio * total_height):
+            and (min_width_ratio * total_width < width < max_width_ratio * total_width):
+
+            # and (min_width_ratio * total_width * min_height_ratio * total_height < area \
+            #     < max_width_ratio * total_width * max_height_ratio * total_height):
             cv2.drawContours(mask, [cnt], 0, 255, -1) 
+            cv2.drawContours(orig_img, [cnt], 0, colors[len(censors) % len(colors)], -1) 
+            
             censors.append(cnt)            
 
     #plt.imshow(mask)
     #plt.show()
 
-    return mask, censors
+    return mask, censors, orig_img
 
 
 def censor_dark_batch(source, destination, params):
