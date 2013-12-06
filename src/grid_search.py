@@ -64,9 +64,9 @@ def boolean_scoring(data, url, params):
 
 def count_scoring(data, url, params):
     """does not filter by censor type yet"""
-    correct = sum(len(redactometer.censor_dark(url + i, **params)[1]) \
+    correct = sum(len(redactometer.censor_fill(url + i, **params)[1]) \
                 == data.ix[i]['total_censor'] for i in data.index)
-    results = [(i, len(redactometer.censor_dark(url + i, **params)[1]), data.ix[i]['total_censor']) \
+    results = [(i, len(redactometer.censor_fill(url + i, **params)[1]), data.ix[i]['total_censor']) \
                     for i in data.index]
     score = float(correct)/float(len(data.index))
     return score, results
