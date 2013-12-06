@@ -46,15 +46,6 @@ def complete_search(training, img_dir, metric, min_start, min_stop, max_start, m
                 'max_height_ratio': max_range}
     return gridsearch(param_grid, training, img_dir, metric)
 
-def eval(test, params, img_root, metric, censor_type="dark"):
-    """Evaluation results on test set"""
-
-    if metric == "is_censored":
-        return boolean_scoring(test, img_root, params)
-
-    if metric == "total_censor":
-        return count_scoring(test, img_root, params)
-
 def boolean_scoring(data, url, params):
     """does not filter by censor type yet"""
     correct = sum((len(redactometer.censor_dark(url + i, **params)[1]) > 0) \
@@ -62,15 +53,40 @@ def boolean_scoring(data, url, params):
     score = float(correct)/float(len(data.index))
     return score
 
-def count_scoring(data, url, params):
-    """does not filter by censor type yet"""
+def count_scoring_binary(data, url, params):
+    """Returns correct only if entire document correct"""
     correct = sum(len(redactometer.censor_fill(url + i, **params)[1]) \
-                == data.ix[i]['total_censor'] for i in data.index)
-    results = [(i, len(redactometer.censor_fill(url + i, **params)[1]), data.ix[i]['total_censor']) \
+                == data.total_censor[i] for i in data.index)
+    results = [(i, len(redactometer.censor_fill(url + i, **params)[1]), data.total_censor[i]) \
                     for i in data.index]
+
     score = float(correct)/float(len(data.index))
     return score, results
  
+
+def count_scoring(data, url, params, metrics=False):
+    """Count number of censors detected over real number""" 
+    error = np.mean([abs_error(len(redactometer.censor_fill(url + i, **params)[1]), \
+              data.total_censor[i]) for i in data.index])
+    return 1 - error
+
+def eval(data, url, params):
+    """ return score and individual metrics"""
+    score = count_scoring(data, url, params)
+    
+    metrics = [(i, len(redactometer.censor_fill(url + i, **params)[1]),  data.total_censor[i], \
+                    abs_error(len(redactometer.censor_fill(url + i, **params)[1]), \
+                    data['total_censor'][i])) for i in data.index]
+        
+    metrics = pandas.DataFrame(metrics, columns=['img', 'observed', 'actual', 'error'])
+    #scores.to_csv(outfile, sep="\t")
+
+    return score, metrics
+
+
+def abs_error(observed, actual):
+    return abs(float(actual - observed) / float(actual))
+
 
 
 
