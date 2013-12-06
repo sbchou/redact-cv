@@ -54,25 +54,40 @@ def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
     #print "img url", img_url
     img = cv2.imread(img_url)
 
+
     orig_img = cv2.imread(img_url)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     _, img = cv2.threshold(img, 127, 255, 1)
-    #grayscale the image
-    #ret, gray = cv2.threshold(img, 127,255,0)
     
+    #grayscale the image
     plt.gray()
+
 
     #im.shape = size of png, as np array
     mask = np.zeros(img.shape) #black mask in shape of image
+    # plt.imshow(img)
+    # plt.show()
+
     contours, hier = cv2.findContours(np.array(img), 
                                       cv2.RETR_EXTERNAL, 
                                       cv2.CHAIN_APPROX_SIMPLE)
 
+
+    #print len(contours)
+    if len(contours) == 1: 
+        #print cv2.boundingRect(contours[0])
+        cv2.drawContours(img, [contours[0]], 0, 0, 100) 
+
+
+    contours, hier = cv2.findContours(np.array(img), 
+                                      cv2.RETR_EXTERNAL, 
+                                      cv2.CHAIN_APPROX_SIMPLE)
+    #print len(contours)
     total_height, total_width = img.shape
 
     censors = []
     colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 255, 255), (255, 0, 255), (255, 255, 0)]
-    print len(contours)
+    #print len(contours)
     for cnt in contours:        
         area = cv2.contourArea(cnt)
         x, y, width, height = cv2.boundingRect(cnt)
