@@ -22,17 +22,13 @@ def gridsearch(param_grid, train, img_root, metric, censor_type="dark"):
     print "number combos", len(combos)
 
     for combo in combos:
-        print "combo", combo
         #boolean
         if metric == 'is_censored':
             score = boolean_scoring(train, img_root, combo)
 
         #are we able to get the right number of blobs?
         if metric == 'total_censor':
-            score = numerical_scoring(train, img_root, combo)
-
-        #score = percent correct 
-        print "score", score
+            score = count_scoring(train, img_root, combo)
 
         #update
         if score >= max_score:
@@ -40,13 +36,14 @@ def gridsearch(param_grid, train, img_root, metric, censor_type="dark"):
             argmax.append(combo) 
     return argmax, max_score     
 
-def complete_search(training, img_dir, metric, start, stop, step):
+def complete_search(training, img_dir, metric, min_start, min_stop, max_start, max_stop, step):
     #range is inclusive
-    param_range = np.arange(start, stop, step)
-    param_grid = {'min_width_ratio' : param_range,
-                'max_width_ratio': param_range,
-                'min_height_ratio': param_range,
-                'max_height_ratio': param_range}
+    min_range = np.arange(min_start, min_stop, step)
+    max_range = np.arange(max_start, max_stop, step)
+    param_grid = {'min_width_ratio' : min_range,
+                'max_width_ratio': max_range,
+                'min_height_ratio': min_range,
+                'max_height_ratio': max_range}
     return gridsearch(param_grid, training, img_dir, metric)
 
 def eval(test, params, img_root, metric, censor_type="dark"):
@@ -56,7 +53,7 @@ def eval(test, params, img_root, metric, censor_type="dark"):
         return boolean_scoring(test, img_root, params)
 
     if metric == "total_censor":
-        return numerical_scoring(test, img_root, params)
+        return count_scoring(test, img_root, params)
 
 def boolean_scoring(data, url, params):
     """does not filter by censor type yet"""
@@ -65,10 +62,16 @@ def boolean_scoring(data, url, params):
     score = float(correct)/float(len(data.index))
     return score
 
-def numerical_scoring(data, url, params):
+def count_scoring(data, url, params):
     """does not filter by censor type yet"""
     correct = sum(len(redactometer.censor_dark(url + i, **params)[1]) \
                 == data.ix[i]['total_censor'] for i in data.index)
+    results = [(i, len(redactometer.censor_dark(url + i, **params)[1]), data.ix[i]['total_censor']) \
+                    for i in data.index]
     score = float(correct)/float(len(data.index))
-    return score
+    return score, results
+ 
+
+
+
 

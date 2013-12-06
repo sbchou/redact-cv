@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
-
+import glob
+import os
 
 def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
@@ -38,7 +39,7 @@ def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
 
 
 
-def censor_test(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
+def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
 
     #print "img url", img_url
@@ -60,15 +61,32 @@ def censor_test(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
         area = cv2.contourArea(cnt)
         x, y, width, height = cv2.boundingRect(cnt)
         if (min_height_ratio * total_height < height < max_height_ratio * total_height) \
-            and (min_width_ratio * total_width < width < max_width_ratio * total_width):
-            #cv2.drawContours(mask, [cnt], 0, 255, -1) 
+            and (min_width_ratio * total_width < width < max_width_ratio * total_width) \
+            and (min_width_ratio * total_width * min_height_ratio * total_height < area \
+                < max_width_ratio * total_width * max_height_ratio * total_height):
+            cv2.drawContours(mask, [cnt], 0, 255, -1) 
             censors.append(cnt)            
 
-    plt.imshow(mask)
-    plt.show()
+    #plt.imshow(mask)
+    #plt.show()
 
     return mask, censors
 
+
+def censor_dark_batch(source, destination, params):
+    """Run the censor detection using given parameters on all images
+    found in a given source dir. Dumps at destination dir. 
+    Greyscale the image, and fill in the censors,
+    and save resulting images. Make sure url ends in backslash"""
+    
+    imgs = glob.glob(source + '*') #glob ALL THE IMAGES
+    for img in imgs:
+        name = os.path.basename(img)
+        mask, censors = censor_fill(img, **params)
+        plt.imshow(mask)
+        plt.savefig(destination + name)
+        plt.close()
+        print "saved figure : " + name
 
 def template_match(img_url, template_url, outfile_name, threshold):
     """
