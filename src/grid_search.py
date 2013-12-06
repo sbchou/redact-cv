@@ -42,7 +42,7 @@ def complete_search(training, img_dir, metric, min_start, min_stop, max_start, m
     max_range = np.arange(max_start, max_stop, step)
     param_grid = {'min_width_ratio' : min_range,
                 'max_width_ratio': max_range,
-                'min_height_ratio': min_range,
+                'min_height_ratio': mitn_range,
                 'max_height_ratio': max_range}
     return gridsearch(param_grid, training, img_dir, metric)
 

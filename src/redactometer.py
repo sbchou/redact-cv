@@ -78,16 +78,18 @@ def censor_dark_batch(source, destination, params):
     found in a given source dir. Dumps at destination dir. 
     Greyscale the image, and fill in the censors,
     and save resulting images. Make sure url ends in backslash"""
-    
+    results = []
     imgs = glob.glob(source + '*') #glob ALL THE IMAGES
     for img in imgs:
         name = os.path.basename(img)
         mask, censors = censor_fill(img, **params)
+        results.append((name, len(censors)))
         plt.imshow(mask)
         plt.savefig(destination + name)
         plt.close()
         print "saved figure : " + name
-
+    return results
+    
 def template_match(img_url, template_url, outfile_name, threshold):
     """
     For input img found in img_url, and template image found at

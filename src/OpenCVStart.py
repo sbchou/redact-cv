@@ -5,7 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
 
-image = cv2.imread("img/2605160002.png")
+image = cv2.imread("../img/2605160002.png")
 #grayscale the image
 im = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 plt.gray()
@@ -47,7 +47,7 @@ for cnt in contours:
 #    cv2.drawContours(mask, [with_dim[i][3]], 0, 255, 1)
 
 plt.imshow(mask)
-
+plt.show()
 #mask = np.zeros(im.shape)
 
 #im2 = ndimage.uniform_filter(im, (50, 50))
