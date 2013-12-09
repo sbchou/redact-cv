@@ -12,7 +12,7 @@ def unpaper(file, out):
     os.system("unpaper   --no-blurfilter --no-noisefilter  /tmp/%s.ppm /tmp/%s.out.ppm"%(a, a))
     os.system("convert /tmp/%s.out.ppm %s"%(a, out))
 
-
+"""
 def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
 
@@ -36,7 +36,7 @@ def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
         area = cv2.contourArea(cnt)
         x, y, width, height = cv2.boundingRect(cnt)
         if (min_height_ratio * total_height < height < max_height_ratio * total_height) \
-            and (min_width_ratio * total_width < width < max_width_ratio * total_width):
+            and (min_width_ratio * total_width < width < max_width_ratio * total_width) :
             cv2.drawContours(mask, [cnt], 0, 255, 1) 
             #cv2.drawContours(orig_img, [cnt], 0, 255, 1) 
             censors.append(cnt)            
@@ -45,10 +45,9 @@ def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
     #plt.show()
 
     return mask, censors
+"""
 
-
-
-def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
+def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9, offset_x=0.05, offset_y=0.10):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
 
     #print "img url", img_url
@@ -57,6 +56,7 @@ def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
 
     orig_img = cv2.imread(img_url)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #threshold assigns pixel > value to color
     _, img = cv2.threshold(img, 127, 255, 1)
     
     #grayscale the image
@@ -72,12 +72,10 @@ def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
                                       cv2.RETR_EXTERNAL, 
                                       cv2.CHAIN_APPROX_SIMPLE)
 
-
     #print len(contours)
     if len(contours) == 1: 
         #print cv2.boundingRect(contours[0])
         cv2.drawContours(img, [contours[0]], 0, 0, 100) 
-
 
     contours, hier = cv2.findContours(np.array(img), 
                                       cv2.RETR_EXTERNAL, 
@@ -91,14 +89,18 @@ def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
     for cnt in contours:        
         area = cv2.contourArea(cnt)
         x, y, width, height = cv2.boundingRect(cnt)
-        if (min_height_ratio * total_height < height < max_height_ratio * total_height) \
-            and (min_width_ratio * total_width < width < max_width_ratio * total_width):
+        #the x, y = left-top corner of boundingrectangle, aka xmin, ymin
+        if offset_x * total_width < x < total_width - offset_x * total_width - width \
+            and offset_y * total_height < y < total_height - offset_y * total_height - height \
+            and (min_height_ratio * total_height < height < max_height_ratio * total_height) \
+            and (min_width_ratio * total_width < width < max_width_ratio * total_width) :
 
             # and (min_width_ratio * total_width * min_height_ratio * total_height < area \
             #     < max_width_ratio * total_width * max_height_ratio * total_height):
             cv2.drawContours(mask, [cnt], 0, 255, -1) 
             cv2.drawContours(orig_img, [cnt], 0, colors[len(censors) % len(colors)], -1) 
-            
+            #print "mean", cv2.mean(img,mask = mask)
+
             censors.append(cnt)            
 
     #plt.imshow(mask)
@@ -116,9 +118,9 @@ def censor_dark_batch(source, destination, params):
     imgs = glob.glob(source + '*') #glob ALL THE IMAGES
     for img in imgs:
         name = os.path.basename(img)
-        mask, censors = censor_fill(img, **params)
+        mask, censors, orig_img = censor_fill(img, **params)
         results.append((name, len(censors)))
-        plt.imshow(mask)
+        plt.imshow(orig_img)
         plt.savefig(destination + name)
         plt.close()
         print "saved figure : " + name
@@ -131,7 +133,7 @@ def template_match(img_url, template_url, outfile_name, threshold):
     """
 
     img_rgb = cv2.imread(img_url)
-    img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+    img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)()
     template = cv2.imread(template_url, 0)
     w, h = template.shape[::-1]
 
