@@ -5,6 +5,20 @@ import matplotlib.pyplot as plt
 import scipy.ndimage as ndimage
 import glob
 import os, random
+import match
+from scipy import misc
+
+################  PRE PROCESSING ################ 
+def deskew_dir(input_dir, output_dir):
+    """Deskew all the images in a src directory and save in out dir"""
+    for f in glob.glob(input_dir + '/*'):
+        print "deskewing file ", f
+        img = cv2.imread(f)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        angle = match.deskew_text(img)
+        deskewed = match.rotateImage(img, angle) 
+        name = output_dir + os.path.basename(f)        
+        misc.imsave(name, deskewed)
 
 def sunpaper(file, out):
     a = str(random.random())
@@ -23,40 +37,6 @@ def unpaper(input_dir, output_dir):
         os.system("convert {output_dir}{base}.out.ppm {output_dir}{base}.out.png".format(output_dir=output_dir, base=os.path.splitext(os.path.basename(f))[0]))
         os.system("rm {output_dir}*.ppm".format(output_dir=output_dir))
  
-"""
-def censor_dark(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9):
-    #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
-
-    #print "img url", img_url
-    img = cv2.imread(img_url)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    #grayscale the image
-    plt.gray()
-
-    #im.shape = size of png, as np array
-    mask = np.zeros(img.shape) #black mask in shape of image
-    contours, hier = cv2.findContours(np.array(img), 
-                                      cv2.RETR_LIST, 
-                                      cv2.CHAIN_APPROX_SIMPLE)
-
-    total_height, total_width = img.shape
-
-    censors = []
-    for cnt in contours:
-        area = cv2.contourArea(cnt)
-        x, y, width, height = cv2.boundingRect(cnt)
-        if (min_height_ratio * total_height < height < max_height_ratio * total_height) \
-            and (min_width_ratio * total_width < width < max_width_ratio * total_width) :
-            cv2.drawContours(mask, [cnt], 0, 255, 1) 
-            #cv2.drawContours(orig_img, [cnt], 0, 255, 1) 
-            censors.append(cnt)            
-
-    #plt.imshow(mask)
-    #plt.show()
-
-    return mask, censors 
-"""
 
 def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9, offset_x=0.05, offset_y=0.10):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
@@ -218,15 +198,19 @@ def blurred_detection(img_url, aperture):
     contours = sorted(contours, key=lambda cnt:cv2.contourArea(cnt), reverse=True)
 
     #simply get average minimum area of censors after spotting and make that the cutoff
-    for cnt in contours:            
-        cv2.drawContours(orig_img, [cnt], 0, colors[len(censors) % len(colors)], -1) 
-        x, y, w, h = cv2.boundingRect(cnt)
-        censors.append((x, y))            
+    for cnt in contours:    
+        x, y, w, h = cv2.boundingRect(cnt)  
+        area = cv2.contourArea(cnt)
+        if (100 < x < 750) and (100 < y < 870) \
+        and area > 300:
+            cv2.drawContours(orig_img, [cnt], 0, colors[len(censors) % len(colors)], -1) 
+            censors.append((x, y))            
 
     #plt.imshow(orig_img)
     #plt.show()
 
     return censors, orig_img 
+
 
 def batch_blurred_detection(in_dir, out_dir, aperture):
     """Run the blurred detection on all images in a folder"""
