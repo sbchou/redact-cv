@@ -7,6 +7,7 @@ import glob
 import os, random
 import match
 from scipy import misc
+import pandas
 
 ################  PRE PROCESSING ################ 
 def deskew_dir(input_dir, output_dir):
@@ -23,7 +24,8 @@ def deskew_dir(input_dir, output_dir):
 def sunpaper(file, out):
     a = str(random.random())
     os.system("convert %s /tmp/%s.ppm"%(file, a))
-    os.system("unpaper -l single --pre-wipe --pre-border --deskew-scan-deviation 2  /tmp/%s.ppm /tmp/%s.out.ppm"%(a, a))
+    os.system("unpaper -l single --pre-wipe --pre-border \
+        --deskew-scan-deviation 2  /tmp/%s.ppm /tmp/%s.out.ppm"%(a, a))
     #os.system("unpaper   --no-blurfilter --no-noisefilter  /tmp/%s.ppm /tmp/%s.out.ppm"%(a, a))
     os.system("convert /tmp/%s.out.ppm %s"%(a, out))
 
@@ -31,33 +33,36 @@ def unpaper(input_dir, output_dir):
     """Unpaper all the files in input directory, store in output directory"""
     for f in glob.glob(input_dir + '/*'): 
         print "processing file ", f
-        os.system("convert {file} {output_dir}{base}.ppm".format(file=f, output_dir=output_dir, base=os.path.splitext(os.path.basename(f))[0]))
-        os.system("unpaper -l single --pre-wipe --pre-border --deskew-scan-deviation 2 {output_dir}{base}.ppm {output_dir}{base}.out.ppm"\
-            .format(input_dir=input_dir, output_dir=output_dir, base=os.path.splitext(os.path.basename(f))[0]))
-        os.system("convert {output_dir}{base}.out.ppm {output_dir}{base}.out.png".format(output_dir=output_dir, base=os.path.splitext(os.path.basename(f))[0]))
+        os.system("convert {file} {output_dir}{base}.ppm".format(\
+            file=f, output_dir=output_dir, base=os.path.splitext(\
+                os.path.basename(f))[0]))
+        os.system("unpaper -l single --pre-wipe --pre-border \
+            --deskew-scan-deviation 2 {output_dir}{base}.ppm {output_dir}{base}.out.ppm"\
+            .format(input_dir=input_dir, output_dir=output_dir,\
+             base=os.path.splitext(os.path.basename(f))[0]))
+        os.system("convert {output_dir}{base}.out.ppm {output_dir}{base}.out.png"\
+            .format(output_dir=output_dir, base=os.path.splitext(os.path.basename(f))[0]))
         os.system("rm {output_dir}*.ppm".format(output_dir=output_dir))
  
 
-def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_ratio=0.2, max_height_ratio=0.9, offset_x=0.05, offset_y=0.10):
+def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  \
+    min_height_ratio=0.2, max_height_ratio=0.9, offset_x=0.05, offset_y=0.10):
     #print min_width_ratio, max_width_ratio, min_height_ratio, max_height_ratio
 
     #print "img url", img_url
     img = cv2.imread(img_url)
 
-
     orig_img = cv2.imread(img_url)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     #threshold assigns pixel > value to color
     _, img = cv2.threshold(img, 127, 255, 1)
+
     
     #grayscale the image
     plt.gray()
 
 
-    #im.shape = size of png, as np array
-    #mask = np.zeros(img.shape) #black mask in shape of image
-    # plt.imshow(img)
-    # plt.show()
+    #lines = cv2.HoughLinesP(img4, 1, math.pi / 4.0, 100, None, 100, 10)
 
     contours, hier = cv2.findContours(np.array(img), 
                                       cv2.RETR_EXTERNAL, 
@@ -108,26 +113,9 @@ def censor_fill(img_url, min_width_ratio=0.2, max_width_ratio=0.9,  min_height_r
                 hull_area = cv2.contourArea(hull) 
                 solidity = float(area)/hull_area
 
-                #if solidity > 0.3 : #doesn't do much tbh
-
-                #approx = cv2.approxPolyDP(cnt,0.01*cv2.arcLength(cnt,True),True)
-                #cv2.drawContours(orig_img, [approx], 0, (0, 0, 0), 2)
-
-                #cv2.rectangle(orig_img,(x,y),(x+width,y+height),(0,255,0),2)
-                
-                #cv2.drawContours(orig_img, [hull], 0, (0, 255, 0), 2)
-
-
-                #cv2.drawContours(mask, [cnt], 0, 255, -1) 
                 cv2.drawContours(orig_img, [cnt], 0, colors[len(censors) % len(colors)], -1) 
-                #print "mean", cv2.mean(img,mask = mask)
-
                 censors.append(cnt)            
 
-    #plt.imshow(mask)
-    #plt.show()
-
-    #return mask, censors, orig_img
     return censors, orig_img
 
 def batch_censor_dark(source, destination, params):
@@ -168,8 +156,9 @@ def template_match(img_url, template_url, outfile_name, threshold):
 
 
 def blurred_detection(img_url, aperture):
-    """Return contours of n-largest areas, n being the cutoff, after running image
-    through a median blur filter with aperture (odd number)"""
+    """Return the top left corner form of tuple (x, y) where x is xmin, y is ymin
+    of the contours of n-largest areas, 
+    after running image through a median blur filter with aperture (odd number)"""
     img = cv2.imread(img_url)
 
     orig_img = cv2.imread(img_url)
@@ -201,8 +190,9 @@ def blurred_detection(img_url, aperture):
     for cnt in contours:    
         x, y, w, h = cv2.boundingRect(cnt)  
         area = cv2.contourArea(cnt)
-        if (100 < x < 750) and (100 < y < 870) \
-        and area > 300:
+        #if (100 < x < 750) and (100 < y < 870) \
+        #    and area > 300:
+        if 50 < y and area > 500:
             cv2.drawContours(orig_img, [cnt], 0, colors[len(censors) % len(colors)], -1) 
             censors.append((x, y))            
 
@@ -216,6 +206,8 @@ def batch_blurred_detection(in_dir, out_dir, aperture):
     """Run the blurred detection on all images in a folder"""
     imgs = glob.glob(in_dir + '*') #glob ALL THE IMAGES
 
+    results = []
+
     for img in imgs:
         name = os.path.basename(img)
         censors, orig_img = blurred_detection(img, aperture)
@@ -223,13 +215,12 @@ def batch_blurred_detection(in_dir, out_dir, aperture):
         plt.imshow(orig_img)
         plt.savefig(out_dir + name)
         plt.close()
-
-        print name
+        
         for censor in censors:
-            print censor
-
-        print
-
+            results.append((name, censor[0], censor[1]))
+    
+    results = pandas.DataFrame(results, columns=["img", "x", "y"])
+    return(results)
 
 def plot_comp(img1, img2):
     """Plot two images side by side"""
